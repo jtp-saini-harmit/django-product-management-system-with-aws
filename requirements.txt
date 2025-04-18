@@ -7,3 +7,7 @@ django-filter==23.1
 django-cors-headers==3.14.0
 pillow==9.5.0
 whitenoise==6.4.0
+django-crispy-forms==2.0
+crispy-bootstrap5==0.7
+django-widget-tweaks==1.4.12
+django-cleanup==7.0.0

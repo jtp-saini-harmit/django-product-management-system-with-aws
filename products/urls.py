@@ -2,9 +2,14 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     CategoryViewSet, ProductViewSet, CustomerViewSet,
-    SaleViewSet, SaleItemViewSet
+    SaleViewSet, SaleItemViewSet, DashboardView,
+    ProductListView, ProductCreateView, ProductUpdateView,
+    ProductDeleteView
 )
 
+app_name = 'products'
+
+# API Routes
 router = DefaultRouter()
 router.register(r'categories', CategoryViewSet)
 router.register(r'products', ProductViewSet)
@@ -13,10 +18,18 @@ router.register(r'sales', SaleViewSet)
 router.register(r'sale-items', SaleItemViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    # Template Views
+    path('', DashboardView.as_view(), name='dashboard'),
+    path('products/', ProductListView.as_view(), name='product_list'),
+    path('products/create/', ProductCreateView.as_view(), name='product_create'),
+    path('products/<int:pk>/edit/', ProductUpdateView.as_view(), name='product_edit'),
+    path('products/<int:pk>/delete/', ProductDeleteView.as_view(), name='product_delete'),
+    
+    # API Routes
+    path('api/', include(router.urls)),
 ]
 
-# Available endpoints:
+# Available API endpoints:
 # /api/categories/ - List and create categories
 # /api/categories/{id}/ - Retrieve, update, delete category
 # /api/categories/{id}/products/ - List products in category
@@ -35,3 +48,10 @@ urlpatterns = [
 
 # /api/sale-items/ - List and create sale items
 # /api/sale-items/{id}/ - Retrieve, update, delete sale item
+
+# Available template views:
+# / - Dashboard view
+# /products/ - Product list view
+# /products/create/ - Create new product
+# /products/<id>/edit/ - Edit existing product
+# /products/<id>/delete/ - Delete product

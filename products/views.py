@@ -1,13 +1,120 @@
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, F
+from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+from django.contrib import messages
+from django.utils import timezone
+from django.db.models.functions import TruncDate
+from datetime import timedelta
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Category, Product, Customer, Sale, SaleItem
 from .serializers import (
     CategorySerializer, ProductSerializer, CustomerSerializer,
     SaleSerializer, SaleItemSerializer
 )
+
+class DashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'products/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get date range for filtering (last 30 days)
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=30)
+        
+        # Basic statistics
+        context['total_products'] = Product.objects.count()
+        context['total_stock'] = Product.objects.aggregate(total=Sum('stock'))['total'] or 0
+        context['total_categories'] = Category.objects.count()
+        context['total_customers'] = Customer.objects.count()
+        
+        # Sales data for the chart
+        sales_data = Sale.objects.filter(
+            sale_date__range=(start_date, end_date),
+            status='completed'
+        ).annotate(
+            date=TruncDate('sale_date')
+        ).values('date').annotate(
+            amount=Sum('total_amount')
+        ).order_by('date')
+        
+        if sales_data:
+            context['sales_data'] = True
+            context['dates'] = [sale['date'].strftime('%Y-%m-%d') for sale in sales_data]
+            context['sales_amounts'] = [float(sale['amount']) for sale in sales_data]
+        
+        # Top selling products
+        context['top_products'] = Product.objects.annotate(
+            sales_count=Count('saleitem')
+        ).order_by('-sales_count')[:5]
+        
+        # Recent sales
+        context['recent_sales'] = Sale.objects.select_related(
+            'customer'
+        ).order_by('-sale_date')[:5]
+        
+        # Low stock products (less than 10 items)
+        context['low_stock_products'] = Product.objects.select_related(
+            'category'
+        ).filter(stock__lt=10).order_by('stock')[:5]
+        
+        # Total sales amount for last 30 days
+        context['total_sales'] = Sale.objects.filter(
+            sale_date__range=(start_date, end_date),
+            status='completed'
+        ).aggregate(total=Sum('total_amount'))['total'] or 0
+        
+        return context
+
+class ProductListView(LoginRequiredMixin, ListView):
+    model = Product
+    template_name = 'products/product_list.html'
+    context_object_name = 'products'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        category_id = self.request.GET.get('category')
+        search = self.request.GET.get('search')
+        
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+        if search:
+            queryset = queryset.filter(name__icontains=search)
+        
+        return queryset.select_related('category')
+
+class ProductCreateView(LoginRequiredMixin, CreateView):
+    model = Product
+    template_name = 'products/product_form.html'
+    fields = ['name', 'description', 'category', 'price', 'stock', 'image']
+    success_url = reverse_lazy('products:product_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Product created successfully.')
+        return super().form_valid(form)
+
+class ProductUpdateView(LoginRequiredMixin, UpdateView):
+    model = Product
+    template_name = 'products/product_form.html'
+    fields = ['name', 'description', 'category', 'price', 'stock', 'image']
+    success_url = reverse_lazy('products:product_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Product updated successfully.')
+        return super().form_valid(form)
+
+class ProductDeleteView(LoginRequiredMixin, DeleteView):
+    model = Product
+    success_url = reverse_lazy('products:product_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Product deleted successfully.')
+        return super().delete(request, *args, **kwargs)
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -56,7 +163,6 @@ class SaleViewSet(viewsets.ModelViewSet):
     filterset_fields = ['status', 'customer']
 
     def create(self, request, *args, **kwargs):
-        # Pass items data to serializer context
         serializer = self.get_serializer(
             data=request.data,
             context={'items': request.data.get('items', [])}

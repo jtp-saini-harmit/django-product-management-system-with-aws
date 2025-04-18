@@ -23,6 +23,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'corsheaders',
+    'crispy_forms',
+    'crispy_bootstrap5',
+    'widget_tweaks',
+    'django_cleanup.apps.CleanupConfig',
     'products',
 ]
 
@@ -91,3 +95,18 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
 CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=True)
+
+# Crispy Forms Settings
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# Login URL for LoginRequiredMixin
+LOGIN_URL = '/admin/login/'
+LOGIN_REDIRECT_URL = '/'
+
+# Message Settings
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+# File Upload Settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+FILE_UPLOAD_PERMISSIONS = 0o644
