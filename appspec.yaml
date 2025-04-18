@@ -1,0 +1,19 @@
+version: 0.0
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: <TASK_DEFINITION>
+        LoadBalancerInfo:
+          ContainerName: "NginxContainer"
+          ContainerPort: 80
+        PlatformVersion: "LATEST"
+Hooks:
+  - BeforeInstall:
+      - location: scripts/before_install.sh
+        timeout: 300
+        runas: root
+  - AfterInstall:
+      - location: scripts/after_install.sh
+        timeout: 300
+        runas: root
