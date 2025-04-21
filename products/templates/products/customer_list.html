@@ -1,0 +1,42 @@
+{% extends 'products/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Customers</h1>
+    </div>
+
+    {% if object_list %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Total Purchases</th>
+                    <th>Created At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in object_list %}
+                <tr>
+                    <td>{{ customer.name }}</td>
+                    <td>{{ customer.email }}</td>
+                    <td>{{ customer.phone|default:"-" }}</td>
+                    <td>{{ customer.total_purchases }}</td>
+                    <td>{{ customer.created_at|date:"Y-m-d" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-people"></i>
+        <h3>No Customers Found</h3>
+        <p>There are no customers in the system yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

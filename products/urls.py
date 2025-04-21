@@ -4,7 +4,8 @@ from .views import (
     CategoryViewSet, ProductViewSet, CustomerViewSet,
     SaleViewSet, SaleItemViewSet, DashboardView,
     ProductListView, ProductCreateView, ProductUpdateView,
-    ProductDeleteView
+    ProductDeleteView, CategoryListView, CustomerListView,
+    SaleListView
 )
 
 app_name = 'products'
@@ -20,10 +21,20 @@ router.register(r'sale-items', SaleItemViewSet)
 urlpatterns = [
     # Template Views
     path('', DashboardView.as_view(), name='dashboard'),
+    # Product URLs
     path('products/', ProductListView.as_view(), name='product_list'),
     path('products/create/', ProductCreateView.as_view(), name='product_create'),
     path('products/<int:pk>/edit/', ProductUpdateView.as_view(), name='product_edit'),
     path('products/<int:pk>/delete/', ProductDeleteView.as_view(), name='product_delete'),
+    
+    # Category URLs
+    path('categories/', CategoryListView.as_view(), name='category_list'),
+    
+    # Customer URLs
+    path('customers/', CustomerListView.as_view(), name='customer_list'),
+    
+    # Sale URLs
+    path('sales/', SaleListView.as_view(), name='sale_list'),
     
     # API Routes
     path('api/', include(router.urls)),

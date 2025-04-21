@@ -1,0 +1,46 @@
+{% extends 'products/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Sales</h1>
+    </div>
+
+    {% if object_list %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Sale Date</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in object_list %}
+                <tr>
+                    <td>{{ sale.id }}</td>
+                    <td>{{ sale.customer.name }}</td>
+                    <td>{{ sale.sale_date|date:"Y-m-d H:i" }}</td>
+                    <td>${{ sale.total_amount|floatformat:2 }}</td>
+                    <td>
+                        <span class="badge {% if sale.status == 'completed' %}bg-success{% elif sale.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ sale.status|title }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-cart"></i>
+        <h3>No Sales Found</h3>
+        <p>There are no sales records in the system yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

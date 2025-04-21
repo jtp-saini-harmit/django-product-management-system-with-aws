@@ -116,6 +116,17 @@ class ProductDeleteView(LoginRequiredMixin, DeleteView):
         messages.success(request, 'Product deleted successfully.')
         return super().delete(request, *args, **kwargs)
 
+class CategoryListView(LoginRequiredMixin, ListView):
+    model = Category
+    template_name = 'products/category_list.html'
+    context_object_name = 'categories'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            products_count=Count('products')
+        )
+
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -143,6 +154,17 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
 
+class CustomerListView(LoginRequiredMixin, ListView):
+    model = Customer
+    template_name = 'products/customer_list.html'
+    context_object_name = 'customers'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            total_purchases=Count('sales')
+        )
+
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
@@ -155,6 +177,15 @@ class CustomerViewSet(viewsets.ModelViewSet):
         sales = customer.sales.all()
         serializer = SaleSerializer(sales, many=True)
         return Response(serializer.data)
+
+class SaleListView(LoginRequiredMixin, ListView):
+    model = Sale
+    template_name = 'products/sale_list.html'
+    context_object_name = 'sales'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('customer')
 
 class SaleViewSet(viewsets.ModelViewSet):
     queryset = Sale.objects.all()
